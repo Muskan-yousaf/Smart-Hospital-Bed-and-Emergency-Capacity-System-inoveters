@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e6e8c'/%3E%3Cpath d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='white'/%3E%3C/svg%3E">
+<title>MedBed Connect · Smart Hospital Bed & Emergency Capacity System</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+:root{
+  --ink:#0f2236;--ink2:#52514e;--mut:#6b7785;--bg:#f3f6f9;--card:#fff;--line:#e1e6eb;--line2:#cfd8e0;
+  --brand:#0e6e8c;--brand2:#0a5670;--brand-soft:#e3f2f7;
+  --good:#0ca30c;--good-ink:#0a6b2e;--good-bg:#e1f5e6;--warn:#fab219;--warn-ink:#7a5200;--warn-bg:#fdf1d4;
+  --serious:#ec835a;--crit:#d03b3b;--crit-ink:#9b1d1d;--crit-bg:#fbe3e3;--info-bg:#e2edfa;--info-ink:#174f8f;
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--radius:10px;--shadow:0 1px 2px rgba(15,34,54,.06),0 1px 8px rgba(15,34,54,.04)
+}
+*{box-sizing:border-box}
+body{margin:0;font:14.5px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,h3,h4{margin:0 0 .4rem;letter-spacing:-.01em;line-height:1.25}h1{font-size:1.45rem}h2{font-size:1.2rem}h3{font-size:1rem}h4{font-size:.9rem}
+p{margin:.3rem 0}a{color:var(--brand);cursor:pointer}
+.mut{color:var(--mut)}.sm{font-size:.82rem}.xs{font-size:.75rem}.b{font-weight:600}.num{font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+.btn{cursor:pointer;border:1px solid transparent;border-radius:8px;padding:.45rem .9rem;background:#e8eef3;color:var(--ink);font-weight:500;white-space:nowrap;transition:background .12s}
+.btn:hover{background:#dbe4eb}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--brand);color:#fff}.btn.primary:hover{background:var(--brand2)}
+.btn.good{background:#13834a;color:#fff}.btn.good:hover{background:#0f6d3d}
+.btn.bad{background:#fff;border-color:#e7b4b4;color:var(--crit-ink)}.btn.bad:hover{background:var(--crit-bg)}
+.btn.ghost{background:transparent;border-color:var(--line2)}.btn.ghost:hover{background:#eef3f6}
+.btn.sm{padding:.25rem .6rem;font-size:.82rem}.btn.lg{padding:.65rem 1.3rem;font-size:1rem}
+:focus-visible{outline:3px solid #7fb3ee;outline-offset:1px}
+input,select,textarea{border:1px solid var(--line2);border-radius:8px;padding:.45rem .65rem;background:#fff;width:100%}
+textarea{resize:vertical}label.f{display:block;font-size:.8rem;color:var(--mut);font-weight:500;margin-bottom:.2rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.7rem;flex-wrap:wrap}
+.card-head h3{margin:0}
+.grid{display:grid;gap:1rem}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g21{grid-template-columns:2fr 1fr}
+.form-grid{display:grid;gap:.75rem;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin:.6rem 0}
+.row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.row.end{justify-content:flex-end}.sp{flex:1}
+/* KPIs */
+.kpis{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:1rem}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:.85rem 1rem;box-shadow:var(--shadow)}
+.kpi .v{font-size:1.65rem;font-weight:650;line-height:1.1;display:block}.kpi .l{color:var(--mut);font-size:.8rem}
+.kpi .s{font-size:.75rem;color:var(--mut);display:block;margin-top:.15rem}
+/* tables */
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:.6rem .65rem;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--mut);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;background:#fafbfc}
+tr:last-child td{border-bottom:0}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+/* tags */
+.tag{display:inline-flex;align-items:center;gap:.25rem;padding:.08rem .55rem;border-radius:99px;font-size:.76rem;font-weight:500;background:#eceff2;color:#3d4a57;white-space:nowrap}
+.tag.g{background:var(--good-bg);color:var(--good-ink)}.tag.r{background:var(--crit-bg);color:var(--crit-ink)}
+.tag.y{background:var(--warn-bg);color:var(--warn-ink)}.tag.b{background:var(--info-bg);color:var(--info-ink)}
+.tag.ai{background:#ece8fb;color:#4a3aa7}
+.u-critical{background:var(--crit-bg);color:var(--crit-ink)}.u-high{background:#fde7dc;color:#8a3a12}.u-medium{background:var(--warn-bg);color:var(--warn-ink)}.u-low{background:#eceff2;color:#3d4a57}
+.warn{color:var(--warn-ink);font-size:.8rem;background:var(--warn-bg);border-radius:6px;padding:.2rem .5rem;display:inline-block}
+.alert{border-radius:8px;padding:.7rem .9rem;margin-bottom:1rem;font-size:.9rem}.alert.y{background:var(--warn-bg);color:var(--warn-ink)}.alert.b{background:var(--info-bg);color:var(--info-ink)}.alert.r{background:var(--crit-bg);color:var(--crit-ink)}
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0 .2rem}
+.chip{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .75rem;border:1px solid var(--line2);border-radius:99px;cursor:pointer;background:#fff;font-size:.86rem;user-select:none}
+.chip input{display:none}.chip:has(input:checked){background:var(--brand-soft);border-color:var(--brand);color:var(--brand2);font-weight:600}
+.chip:has(input:checked)::before{content:"✓"}
+/* login */
+#login{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
+#login .hero{background:linear-gradient(160deg,#0f2236 0%,#0e4f68 100%);color:#fff;padding:3.2rem;display:flex;flex-direction:column;justify-content:center}
+#login .hero h1{font-size:2.2rem;line-height:1.15;margin-bottom:1rem;max-width:520px}
+#login .hero p{color:#b9d0de;max-width:480px;font-size:1rem}
+.flow{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:2rem;font-size:.82rem}
+.flow span{background:rgba(255,255,255,.1);padding:.25rem .6rem;border-radius:99px;color:#e1eef5}
+.logo{display:flex;align-items:center;gap:.55rem;font-weight:700;font-size:1.05rem;margin-bottom:2.5rem}
+.logo i{width:30px;height:30px;border-radius:8px;background:#fff;color:var(--brand);display:grid;place-items:center;font-style:normal;font-weight:800}
+#login .formside{display:grid;place-items:center;padding:2rem}
+#login form{width:100%;max-width:380px;display:grid;gap:.8rem}
+.demo{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}.demo .btn{font-size:.82rem;text-align:left}
+.demo .btn small{display:block;color:var(--mut);font-weight:400}
+/* app shell */
+#app{display:none;grid-template-columns:236px 1fr;min-height:100vh}
+nav{background:#0f2236;color:#fff;padding:1.2rem .8rem;display:flex;flex-direction:column;gap:.15rem;position:sticky;top:0;height:100vh}
+nav .logo{margin:0 .5rem 1.6rem;font-size:1rem}
+nav a{padding:.55rem .75rem;border-radius:8px;cursor:pointer;color:#b4c4d3;display:flex;align-items:center;gap:.6rem;text-decoration:none}
+nav a:hover{background:#1a3350;color:#fff}nav a.on{background:#1f4466;color:#fff;font-weight:600}
+nav a .cnt{margin-left:auto;background:var(--crit);color:#fff;border-radius:99px;font-size:.72rem;padding:0 .45rem}
+nav .who{margin-top:auto;padding:.8rem .75rem;border-top:1px solid #213b57;font-size:.84rem;color:#9fb3c5}
+nav .who b{color:#fff;display:block}
+.shell{display:flex;flex-direction:column;min-width:0}
+header.top{display:flex;align-items:center;gap:1rem;padding:.8rem 2rem;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:500}
+header.top .crumb{font-weight:600}header.top .live{font-size:.78rem;color:var(--good-ink);display:flex;align-items:center;gap:.35rem}
+header.top .live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good)}
+.bell{position:relative;background:none;border:1px solid var(--line2);border-radius:8px;padding:.35rem .6rem;cursor:pointer}
+.bell .dot{position:absolute;top:-6px;right:-6px;background:var(--crit);color:#fff;border-radius:99px;font-size:.7rem;padding:0 .4rem;min-width:18px;text-align:center}
+#npanel{position:fixed;right:2rem;top:3.3rem;width:360px;max-height:420px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 30px rgba(15,34,54,.15);display:none;z-index:600}
+#npanel div.n{padding:.65rem .9rem;border-bottom:1px solid var(--line);font-size:.86rem}#npanel div.n.unread{background:#f2f8fb}
+main{padding:1.5rem 2rem 3rem;max-width:1320px;width:100%}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1.1rem;flex-wrap:wrap}
+.page-head p{margin:0}
+/* hospital result cards */
+.res-layout{display:grid;grid-template-columns:1.25fr 1fr;gap:1rem;align-items:start}
+.hlist{display:grid;gap:.75rem}
+.hcard{border:1px solid var(--line);border-radius:10px;padding:.9rem 1rem;background:#fff}
+.hcard.top1{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.hcard.dim{background:#fafbfc}.hcard.dim .hname{color:#5b6875}
+.hcard-top{display:flex;justify-content:space-between;gap:1rem}
+.hname{font-weight:650;font-size:1rem}.rank{display:inline-block;background:var(--brand);color:#fff;border-radius:6px;padding:0 .4rem;font-size:.78rem;margin-right:.4rem}
+.match{text-align:right;min-width:70px}.match b{font-size:1.5rem;display:block;line-height:1;color:var(--brand2)}.match span{font-size:.72rem;color:var(--mut)}
+.facts{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-size:.82rem;color:var(--ink2);margin:.5rem 0}
+.facts b{color:var(--ink)}
+.res-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
+.brk{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:.5rem 0}.brk div{font-size:.72rem;color:var(--mut)}
+.meter{height:6px;border-radius:3px;background:#e8edf1;overflow:hidden;margin-top:.2rem}.meter i{display:block;height:100%;background:var(--s1);border-radius:3px}
+.meter.hot i{background:var(--crit)}.meter.mid i{background:var(--warn)}
+.hcard-act{display:flex;justify-content:space-between;align-items:center;margin-top:.6rem;gap:.6rem}
+.map{height:460px;border-radius:10px;border:1px solid var(--line);position:sticky;top:5rem}
+.map.short{height:340px;position:relative;top:auto}
+/* request cards */
+.rq{border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:.8rem;background:#fff}
+.rq-top{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.stepper{display:flex;list-style:none;padding:0;margin:.9rem 0 .5rem;gap:0;counter-reset:s}
+.stepper li{flex:1;position:relative;text-align:center;font-size:.74rem;color:var(--mut);padding-top:24px}
+.stepper li::before{content:"";position:absolute;top:6px;left:50%;width:12px;height:12px;border-radius:50%;background:#d5dde4;transform:translateX(-50%);z-index:1}
+.stepper li::after{content:"";position:absolute;top:11px;left:-50%;width:100%;height:2px;background:#d5dde4}
+.stepper li:first-child::after{display:none}
+.stepper li.done::before,.stepper li.done::after,.stepper li.cur::after{background:var(--brand)}
+.stepper li.cur::before{background:#fff;border:3px solid var(--brand);width:14px;height:14px;top:5px}
+.stepper li.cur{color:var(--ink);font-weight:600}
+.qrbox{display:flex;gap:1rem;align-items:center;background:#f6fafb;border:1px dashed var(--line2);border-radius:10px;padding:.7rem;margin-top:.6rem}
+.code{font:600 1.35rem/1 ui-monospace,Consolas,monospace;letter-spacing:.15em}
+.cd{font-variant-numeric:tabular-nums;font-weight:650}
+.summary{background:#f7f5fd;border-left:3px solid #7a6bd6;padding:.45rem .7rem;border-radius:0 6px 6px 0;font-size:.85rem;margin:.4rem 0}
+/* capacity editor */
+.stepbox{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.stepbox button{border:0;background:#f0f4f7;width:28px;cursor:pointer}.stepbox button:hover{background:#e1e9ef}
+.stepbox input{border:0;border-radius:0;width:58px;text-align:center;padding:.35rem 0}
+.beds{display:flex;flex-wrap:wrap;gap:2px;max-width:170px}.beds i{width:8px;height:8px;border-radius:2px;background:#4fc28a}
+.beds i.o{background:#8a98a6}.beds i.r{background:var(--warn)}.beds i.u{background:var(--crit);opacity:.55}
+tr.dirty td{background:#fffbea}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.78rem;color:var(--mut)}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:.3rem;vertical-align:-1px}
+.chart{position:relative;height:250px}.chart.tall{height:300px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:.35rem .8rem;cursor:pointer;font-size:.85rem}.seg button.on{background:var(--brand);color:#fff}
+.empty{text-align:center;padding:2.2rem 1rem;color:var(--mut)}
+/* modal & toast */
+#modal{position:fixed;inset:0;background:rgba(15,34,54,.45);display:none;place-items:center;z-index:2000;padding:1rem}
+#modal .box{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow:auto;padding:1.4rem 1.5rem;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+#modal .box.wide{max-width:900px}
+#toast{position:fixed;bottom:1.2rem;right:1.2rem;display:grid;gap:.5rem;z-index:3000}
+#toast div{background:#0f2236;color:#fff;padding:.7rem 1rem;border-radius:8px;max-width:360px;box-shadow:0 6px 20px rgba(0,0,0,.2);font-size:.9rem}
+#toast div.err{background:#9b1d1d}#toast div.ok{background:#0f6d3d}
+@media(max-width:1000px){.res-layout,.g2,.g3,.g21{grid-template-columns:1fr}.map{position:relative;top:auto;height:340px}}
+@media(max-width:800px){#login,#app{grid-template-columns:1fr}#login .hero{padding:2rem}nav{position:static;height:auto;flex-direction:row;flex-wrap:wrap}nav .logo{width:100%;margin-bottom:.5rem}nav .who{margin:0;border:0}main,header.top{padding-left:1rem;padding-right:1rem}}
+</style></head><body>
+
+<!-- ================= LOGIN ================= -->
+<div id="login">
+  <div class="hero">
+    <div class="logo"><i>+</i> MedBed Connect</div>
+    <h1>Find the right hospital bed before the ambulance leaves.</h1>
+    <p>Live ICU, ventilator and emergency capacity across hospitals, with smart matching, referral and bed reservation in one place.</p>
+    <div class="flow"><span>Need</span><span>→ Capacity</span><span>→ Matching</span><span>→ Referral</span><span>→ Admission</span><span>→ Updated capacity</span></div>
+  </div>
+  <div class="formside">
+    <form onsubmit="doLogin(event)">
+      <div><h2>Sign in</h2><p class="mut sm">Use your account, or try a demo role below.</p></div>
+      <div><label class="f" for="u">Username</label><input id="u" autocomplete="username" required></div>
+      <div><label class="f" for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div>
+      <button class="btn primary lg">Sign in</button>
+      <div class="sm mut">Demo accounts:</div>
+      <div class="demo">
+        <button type="button" class="btn" onclick="demo('patient1','patient123')">Patient<small>patient1</small></button>
+        <button type="button" class="btn" onclick="demo('coord1','coord123')">Ambulance coordinator<small>coord1</small></button>
+        <button type="button" class="btn" onclick="demo('staff1','staff123')">Hospital staff<small>staff1 · City Care</small></button>
+        <button type="button" class="btn" onclick="demo('admin','admin123')">Administrator<small>admin</small></button>
+      </div>
+      <div class="row sm"><a onclick="registerUser()">Create a patient / coordinator account</a><span class="sp"></span><a onclick="registerHospital()">Register a hospital</a></div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <nav id="nav"></nav>
+  <div class="shell">
+    <header class="top"><span class="crumb" id="crumb"></span><span class="live">Live · auto-refresh</span><span class="sp"></span>
+      <button class="bell" onclick="toggleNotif()" aria-label="Notifications">🔔<span class="dot" id="ndot" hidden></span></button>
+    </header>
+    <div id="npanel"></div>
+    <main id="main"></main>
+  </div>
+</div>
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="box" id="mbox"></div></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ============ config & helpers ============ */
+// Same origin when served by FastAPI (http://127.0.0.1:8000/); falls back to the local API when opened as a file or via Live Server.
+const API=(location.protocol==="file:"||["5500","5501","3000","5173","8080"].includes(location.port))?"http://127.0.0.1:8000":"";
+const RES=["general","emergency","icu","nicu","ventilator","operation_theatre","isolation","dialysis","trauma","ambulance"];
+const LABEL={general:"General bed",emergency:"Emergency bed",icu:"ICU bed",nicu:"NICU bed",ventilator:"Ventilator",operation_theatre:"Operation theatre",isolation:"Isolation bed",dialysis:"Dialysis",trauma:"Trauma bay",ambulance:"Ambulance"};
+const SERVICES=["cardiology","neurology","surgery","orthopedics","pulmonology","nephrology","neonatology","gynecology","pediatrics","emergency","general"];
+const PLACES=[["Saddar, Hyderabad",25.3960,68.3650],["Latifabad, Hyderabad",25.3780,68.3800],["Qasimabad, Hyderabad",25.4050,68.3300],["Jamshoro",25.4300,68.2800],["Kotri",25.3650,68.3050],["Tando Jam",25.4270,68.5300]];
+const STATUS={searching:["Searching",""],request_sent:["Request sent","y"],hospital_reviewing:["Hospital reviewing","y"],accepted:["Accepted · bed held","g"],patient_transferred:["Patient on the way","b"],admitted:["Admitted","g"],discharged:["Discharged",""],rejected:["Rejected","r"],cancelled:["Cancelled",""],expired:["Expired","r"],no_capacity:["No capacity available","r"]};
+const STEPS=["request_sent","hospital_reviewing","accepted","patient_transferred","admitted"];
+const PAL=["#2a78d6","#eb6834","#1baf7a"];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nm=s=>String(s??"").replace(/_/g," ");
+const rl=r=>LABEL[r]||nm(r);
+const T=d=>new Date(String(d).endsWith("Z")?d:d+"Z");
+const ago=d=>{if(!d)return"-";const m=Math.round((Date.now()-T(d))/60000);return m<1?"just now":m<60?m+" min ago":m<1440?Math.round(m/60)+" h ago":Math.round(m/1440)+" d ago"};
+const fmtT=d=>d?T(d).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"-";
+const pct=(a,b)=>b?Math.round(100*a/b):0;
+const secs=s=>s==null?"-":s<90?Math.round(s)+" s":Math.round(s/60)+" min";
+const tag=s=>{const [l,c]=STATUS[s]||[nm(s),""];return `<span class="tag ${c}">${l}</span>`};
+const urg=u=>`<span class="tag u-${u}">${u}</span>`;
+const kpi=(v,l,s="")=>`<div class="kpi"><span class="l">${l}</span><span class="v num">${v??"-"}</span>${s?`<span class="s">${s}</span>`:""}</div>`;
+const meter=p=>`<div class="meter ${p>=90?"hot":p>=75?"mid":""}"><i style="width:${Math.min(100,p)}%"></i></div>`;
+const M=h=>{$("main").innerHTML=h};
+const summaryText=r=>{try{return JSON.parse(r.summary||"{}").text||""}catch{return""}};
+
+let S=JSON.parse(sessionStorage.getItem("medbed")||"null")||{token:null};
+let timer=null,tick=null,map=null,nTimer=null,lastNotif=0,charts={};
+const save=()=>sessionStorage.setItem("medbed",JSON.stringify(S));
+
+function toast(m,type=""){const d=document.createElement("div");d.className=type;d.textContent=m;$("toast").appendChild(d);setTimeout(()=>d.remove(),4500)}
+async function api(path,method="GET",body=null,form=false){
+  const h={};if(S.token)h.Authorization="Bearer "+S.token;
+  let b=null;if(body){if(form){b=new URLSearchParams(body)}else{h["Content-Type"]="application/json";b=JSON.stringify(body)}}
+  let r;try{r=await fetch(API+path,{method,headers:h,body:b})}catch(e){toast("Cannot reach the server. Is it running on port 8000?","err");throw e}
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok){let m=typeof d.detail==="string"?d.detail:Array.isArray(d.detail)?d.detail.map(x=>`${x.loc?.slice(-1)[0]}: ${x.msg}`).join("; "):"Error "+r.status;
+    if(r.status===401&&S.token){logout();m="Session expired. Please sign in again."}toast(m,"err");throw new Error(m)}
+  return d}
+function modal(html,wide=false){$("mbox").className="box"+(wide?" wide":"");$("mbox").innerHTML=html;$("modal").style.display="grid";$("mbox").querySelector("input,textarea,select")?.focus()}
+function closeModal(){$("modal").style.display="none"}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+const formData=f=>Object.fromEntries(new FormData(f).entries());
+
+/* charts: one validated palette, thin marks, recessive grid, hover tooltips */
+function chart(id,type,labels,datasets,opt={}){
+  const el=$(id);if(!el||!window.Chart)return;charts[id]?.destroy();
+  const horiz=opt.indexAxis==="y";
+  const valueAxis={beginAtZero:true,grid:{color:"#e1e0d9"},border:{display:false},ticks:{color:"#898781",precision:0,...(opt.pctAxis?{callback:v=>v+"%"}:{})},...(opt.max?{max:opt.max}:{})};
+  const catAxis={grid:{display:false},border:{color:"#c3c2b7"},ticks:{color:"#898781",autoSkip:true,maxRotation:0}};
+  charts[id]=new Chart(el,{type,data:{labels,datasets:datasets.map((d,i)=>({
+      borderColor:PAL[i],backgroundColor:type==="line"?(datasets.length===1?PAL[i]+"1f":PAL[i]):PAL[i],
+      borderWidth:type==="line"?2:0,borderRadius:type==="bar"?4:0,borderSkipped:"start",pointRadius:type==="line"?2.5:0,pointHoverRadius:5,
+      pointBackgroundColor:PAL[i],tension:.3,fill:type==="line"&&datasets.length===1,maxBarThickness:26,...d}))},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,indexAxis:opt.indexAxis||"x",
+      interaction:{mode:"index",intersect:false,axis:horiz?"y":"x"},
+      plugins:{legend:{display:datasets.length>1,position:"top",align:"start",labels:{boxWidth:10,boxHeight:10,color:"#52514e",useBorderRadius:true,borderRadius:2}},
+        tooltip:{backgroundColor:"#0f2236",padding:9,cornerRadius:6,titleFont:{weight:"600"},callbacks:opt.pctAxis?{label:c=>`${c.dataset.label||""} ${c.formattedValue}%`.trim()}:{}}},
+      scales:horiz?{x:valueAxis,y:catAxis}:{x:catAxis,y:valueAxis}}})}
+const dayLbl=d=>new Date(d+"T00:00:00").toLocaleDateString([], {weekday:"short",day:"numeric"});
+
+/* ============ auth ============ */
+function demo(u,p){$("u").value=u;$("p").value=p;$("u").form.requestSubmit()}
+async function doLogin(e){e.preventDefault();
+  try{const d=await api("/auth/login","POST",{username:$("u").value.trim(),password:$("p").value},true);
+    S={token:d.access_token,role:d.role,hid:d.hospital_id,name:d.full_name};save();start()}catch(x){}}
+function logout(){S={token:null};save();clearInterval(timer);clearInterval(tick);clearInterval(nTimer);$("app").style.display="none";$("login").style.display="grid";$("p").value=""}
+function registerUser(){modal(`<h2>Create an account</h2><p class="mut sm">Patients and attendants can search hospitals and send requests. Ambulance coordinators can manage several patients.</p>
+<form onsubmit="doRegister(event)" class="grid" style="gap:.7rem;margin-top:.8rem">
+<div><label class="f">Full name</label><input name="full_name" required></div>
+<div class="form-grid" style="margin:0"><div><label class="f">Username</label><input name="username" required minlength="3" pattern="[A-Za-z0-9_.\\-]+"></div><div><label class="f">Password (6+ characters)</label><input name="password" type="password" required minlength="6"></div></div>
+<div class="form-grid" style="margin:0"><div><label class="f">Phone</label><input name="phone"></div><div><label class="f">I am a</label><select name="role"><option value="patient">Patient / attendant</option><option value="coordinator">Ambulance / emergency coordinator</option></select></div></div>
+<div class="row end"><button type="button" class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary">Create account</button></div></form>`)}
+async function doRegister(e){e.preventDefault();const f=formData(e.target);
+  try{await api("/auth/register","POST",f);closeModal();toast("Account created. You can sign in now.","ok");$("u").value=f.username;$("p").value=f.password}catch(x){}}
+function registerHospital(){modal(`<h2>Register a hospital</h2><p class="mut sm">Your hospital becomes visible to patients after an administrator verifies it. You can set capacity right away.</p>
+<form onsubmit="doHospSignup(event)" class="grid" style="gap:.7rem;margin-top:.8rem">${hospitalFields()}
+<h4 style="margin-top:.4rem">First staff account</h4>
+<div class="form-grid" style="margin:0"><div><label class="f">Staff name</label><input name="staff_full_name"></div><div><label class="f">Username</label><input name="staff_username" required minlength="3"></div><div><label class="f">Password</label><input name="staff_password" type="password" required minlength="6"></div></div>
+<div class="row end"><button type="button" class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary">Submit for verification</button></div></form>`)}
+const hospitalFields=()=>`<div><label class="f">Hospital name</label><input name="name" required minlength="3"></div>
+<div class="form-grid" style="margin:0"><div><label class="f">Address / area</label><input name="location"></div><div><label class="f">City</label><input name="city" required></div><div><label class="f">Contact number</label><input name="contact"></div></div>
+<div class="form-grid" style="margin:0"><div><label class="f">Latitude</label><input name="latitude" id="hlat" type="number" step="any" required></div><div><label class="f">Longitude</label><input name="longitude" id="hlon" type="number" step="any" required></div><div style="align-self:end"><button type="button" class="btn ghost" onclick="geo('hlat','hlon')">Use my location</button></div></div>
+<div><label class="f">Specialist services (comma separated)</label><input name="services" placeholder="cardiology, surgery, neonatology"></div>
+<label class="row sm"><input type="checkbox" name="emergency_available" checked style="width:auto"> Emergency department available</label>`;
+const hospitalBody=f=>({...f,latitude:+f.latitude,longitude:+f.longitude,emergency_available:"emergency_available" in f});
+async function doHospSignup(e){e.preventDefault();try{await api("/hospitals/signup","POST",hospitalBody(formData(e.target)));closeModal();toast("Hospital submitted. Sign in with the staff account; search visibility starts after verification.","ok")}catch(x){}}
+
+/* ============ shell ============ */
+const NAV={
+  patient:[["find","Find a hospital"],["mine","My requests"],["dir","Hospital directory"]],
+  coordinator:[["find","Find a hospital"],["mine","Referrals"],["dir","Live capacity map"]],
+  hospital_staff:[["dash","Dashboard"],["inbox","Referral requests"],["cap","Capacity"],["pat","Admitted patients"],["prof","Hospital profile"]],
+  admin:[["sys","System overview"],["hosp","Hospitals"],["users","Users"],["audit","Audit log"]]};
+const ROLE={patient:"Patient / attendant",coordinator:"Emergency coordinator",hospital_staff:"Hospital staff",admin:"Administrator"};
+const VIEWS={find:vFind,mine:vMine,dir:vDir,dash:vDash,inbox:vInbox,cap:vCap,pat:vPat,prof:vProf,sys:vSys,hosp:vHosp,users:vUsers,audit:vAudit};
+// views with a map are not auto-refreshed so the map doesn't reset while being used
+const LIVE=["mine","dash","inbox","cap","pat","hosp"];
+async function start(){$("login").style.display="none";$("app").style.display="grid";
+  if(S.role==="hospital_staff"){try{S.hosp=await api("/hospitals/"+S.hid);save()}catch(x){return}}
+  go(S.tab&&NAV[S.role].some(n=>n[0]===S.tab)?S.tab:NAV[S.role][0][0]);
+  clearInterval(nTimer);pollNotif();nTimer=setInterval(pollNotif,12000);
+  clearInterval(tick);tick=setInterval(countdowns,1000)}
+function go(t){S.tab=t;save();const label=NAV[S.role].find(n=>n[0]===t)[1];
+  $("nav").innerHTML=`<div class="logo"><i>+</i> MedBed Connect</div>`+NAV[S.role].map(([k,l])=>`<a class="${k===t?"on":""}" onclick="go('${k}')">${l}${k==="inbox"?`<span class="cnt" id="inboxCnt" hidden></span>`:""}</a>`).join("")+
+   `<div class="who"><b>${esc(S.name)}</b>${ROLE[S.role]}${S.hosp?`<br>${esc(S.hosp.name)}`:""}<br><a onclick="logout()" style="color:#7fc4e0">Sign out</a></div>`;
+  $("crumb").textContent=label;$("npanel").style.display="none";
+  clearInterval(timer);Object.values(charts).forEach(c=>c.destroy());charts={};
+  VIEWS[t]();if(LIVE.includes(t))timer=setInterval(()=>VIEWS[t](true),10000)}
+function countdowns(){document.querySelectorAll("[data-exp]").forEach(el=>{const s=Math.max(0,Math.round((T(el.dataset.exp)-Date.now())/1000));
+  el.textContent=s?`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`:"expired"})}
+
+async function pollNotif(){if(!S.token)return;try{const n=await api("/notifications");const un=n.filter(x=>!x.is_read);
+  $("ndot").hidden=!un.length;$("ndot").textContent=un.length;
+  const newest=n[0]?.id||0;if(lastNotif&&newest>lastNotif)un.filter(x=>x.id>lastNotif).slice(0,2).forEach(x=>toast(x.message));lastNotif=newest;
+  $("npanel").innerHTML=`<div class="n row"><b>Notifications</b><span class="sp"></span><span class="xs mut">${un.length} unread</span></div>`+(n.map(x=>`<div class="n ${x.is_read?"":"unread"}">${esc(x.message)}<div class="xs mut">${ago(x.created_at)}</div></div>`).join("")||`<div class="n mut">Nothing yet.</div>`)}catch(x){}}
+async function toggleNotif(){const p=$("npanel");const open=p.style.display!=="block";p.style.display=open?"block":"none";
+  if(open&&!$("ndot").hidden){await api("/notifications/read","POST");$("ndot").hidden=true}}
+function geo(a="lat",b="lon"){if(!navigator.geolocation)return toast("Location not supported in this browser","err");
+  navigator.geolocation.getCurrentPosition(p=>{$(a).value=p.coords.latitude.toFixed(4);$(b).value=p.coords.longitude.toFixed(4);toast("Location set","ok")},()=>toast("Location permission denied. Pick an area or type coordinates.","err"))}
+function newMap(id,lat,lon,z=11){if(map){map.remove();map=null}if(!window.L||!$(id))return null;
+  map=L.map(id,{scrollWheelZoom:false,zoomAnimation:false,fadeAnimation:false}).setView([lat,lon],z);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",maxZoom:18}).addTo(map);
+  const m=map;setTimeout(()=>{if(map===m)m.invalidateSize()},200);return map}
+
+/* ================= PATIENT / COORDINATOR ================= */
+let F={rs:["icu"],urg:"medium",svc:"",lat:25.396,lon:68.365,dist:50,em:false,desc:"",place:0},CMP=new Set(),LAST=null;
+function vFind(){M(`<div class="page-head"><div><h1>Find a hospital</h1><p class="mut">Hospitals are ranked by live capacity, distance, travel time and current load, not just listed.</p></div></div>
+<div class="grid g21">
+ <div class="card">
+  <div class="card-head"><h3>1 · Describe the patient <span class="tag ai">AI assist</span></h3></div>
+  <textarea id="desc" rows="3" placeholder="e.g. 60 year old man unconscious after heart attack, SpO2 84%, BP 85/50">${esc(F.desc)}</textarea>
+  <div class="row" style="margin-top:.5rem"><span class="sm mut">Detects the needed facility, urgency and writes a short case summary.</span><span class="sp"></span><button class="btn" onclick="analyze()">Analyse description</button></div>
+  <div id="aiout"></div>
+  <div class="card-head" style="margin-top:1rem"><h3>2 · What does the patient need?</h3></div>
+  <div class="chips" id="needs">${RES.filter(r=>r!=="ambulance").map(r=>`<label class="chip"><input type="checkbox" value="${r}" ${F.rs.includes(r)?"checked":""}>${rl(r)}</label>`).join("")}</div>
+  <div class="form-grid">
+   <div><label class="f">Urgency</label><select id="urg">${["low","medium","high","critical"].map(u=>`<option ${u===F.urg?"selected":""}>${u}</option>`).join("")}</select></div>
+   <div><label class="f">Specialist service (optional)</label><input id="svc" list="svcs" value="${esc(F.svc)}" placeholder="any"><datalist id="svcs">${SERVICES.map(s=>`<option value="${s}">`).join("")}</datalist></div>
+   <div><label class="f">Search radius</label><select id="dist">${[10,25,50,100].map(d=>`<option value="${d}" ${d==F.dist?"selected":""}>${d} km</option>`).join("")}</select></div>
+   <div style="align-self:end"><label class="row sm"><input type="checkbox" id="em" ${F.em?"checked":""} style="width:auto"> Emergency department required</label></div>
+  </div>
+ </div>
+ <div class="card">
+  <div class="card-head"><h3>3 · Patient location</h3></div>
+  <label class="f">Area</label><select id="place" onchange="pickPlace()">${PLACES.map((p,i)=>`<option value="${i}" ${i==F.place?"selected":""}>${p[0]}</option>`).join("")}<option value="-1" ${F.place==-1?"selected":""}>Custom coordinates</option></select>
+  <div class="form-grid"><div><label class="f">Latitude</label><input id="lat" type="number" step="any" value="${F.lat}"></div><div><label class="f">Longitude</label><input id="lon" type="number" step="any" value="${F.lon}"></div></div>
+  <button class="btn ghost" onclick="geo();$('place').value='-1'">📍 Use my current location</button>
+  <hr style="border:0;border-top:1px solid var(--line);margin:1rem 0">
+  <button class="btn primary lg" style="width:100%" onclick="search()">Find suitable hospitals</button>
+ </div>
+</div><div id="res"></div>`);if(LAST)renderResults(LAST)}
+function pickPlace(){const i=+$("place").value;if(i>=0){$("lat").value=PLACES[i][1];$("lon").value=PLACES[i][2]}}
+function readForm(){F={rs:[...document.querySelectorAll("#needs input:checked")].map(c=>c.value),urg:$("urg").value,svc:$("svc").value.trim(),
+  lat:+$("lat").value,lon:+$("lon").value,dist:+$("dist").value,em:$("em").checked,desc:$("desc").value,place:+$("place").value}}
+async function analyze(){const t=$("desc").value.trim();if(!t)return toast("Type a short description first","err");
+  try{const d=await api("/classify","POST",{description:t});
+    document.querySelectorAll("#needs input").forEach(c=>c.checked=d.required_resources.includes(c.value));$("urg").value=d.urgency;$("svc").value=d.required_service||"";
+    const s=d.structured;$("aiout").innerHTML=`<div class="summary"><b>Case summary:</b> ${esc(d.summary)}<div class="row xs" style="margin-top:.3rem;gap:.4rem">${urg(d.urgency)}
+      ${d.required_resources.map(r=>`<span class="tag b">${rl(r)}</span>`).join("")}${d.required_service?`<span class="tag">${esc(d.required_service)}</span>`:""}
+      ${Object.entries(s.vitals).map(([k,v])=>`<span class="tag">${nm(k)}: ${v}</span>`).join("")}<span class="sp"></span><span class="mut">confidence ${Math.round(d.confidence*100)}%</span></div></div>`;
+    toast("Needs and urgency filled in from the description","ok")}catch(x){}}
+async function search(){readForm();if(!F.rs.length)return toast("Pick at least one resource","err");
+  if(isNaN(F.lat)||isNaN(F.lon))return toast("Enter a valid location","err");
+  try{const d=await api("/search/match","POST",{required_resources:F.rs,required_service:F.svc||null,latitude:F.lat,longitude:F.lon,urgency:F.urg,max_distance_km:F.dist,emergency_only:F.em});
+    LAST={d,F:{...F}};renderResults(LAST);$("res").scrollIntoView({behavior:"smooth",block:"start"})}catch(x){}}
+function renderResults({d,F:q}){const ok=d.filter(h=>h.suitable);CMP.clear();
+  $("res").innerHTML=`<div class="card"><div class="card-head"><div><h3>${ok.length?`${ok.length} of ${d.length} hospitals can take this patient`:"No hospital can take this patient right now"}</h3>
+   <span class="sm mut">Needs: ${q.rs.map(rl).join(" + ")} · ${q.urg} urgency${q.svc?" · "+esc(q.svc):""} · within ${q.dist} km</span></div>
+   <button class="btn ghost" id="cmpBtn" onclick="compare()" disabled>Compare selected (0)</button></div>
+   ${ok.length?"":`<div class="alert y">Try a wider radius, fewer requirements, or contact the nearest hospital directly. Unsuitable hospitals are listed with the reason.</div>`}
+   <div class="res-layout"><div class="hlist">${d.map(hcard).join("")}</div><div><div id="map" class="map"></div><div class="legend" style="margin-top:.4rem"><span><i style="background:#2a78d6;border-radius:50%"></i>Patient</span><span><i style="background:#0ca30c;border-radius:50%"></i>Suitable</span><span><i style="background:#d03b3b;border-radius:50%"></i>Not suitable</span></div></div></div></div>`;
+  const m=newMap("map",q.lat,q.lon,11);if(!m)return;const pts=[[q.lat,q.lon]];
+  L.circleMarker([q.lat,q.lon],{radius:9,color:"#fff",weight:2,fillColor:"#2a78d6",fillOpacity:1}).addTo(m).bindPopup("Patient location");
+  d.forEach(h=>{pts.push([h.latitude,h.longitude]);L.circleMarker([h.latitude,h.longitude],{radius:h.rank===1?13:10,color:"#fff",weight:2,fillColor:h.suitable?"#0ca30c":"#d03b3b",fillOpacity:.9}).addTo(m)
+    .bindPopup(`<b>${esc(h.hospital_name)}</b><br>${h.distance_km} km · ~${h.estimated_travel_min} min<br>${h.suitable?h.match_percent+"% match":"Not suitable: "+h.reasons_not_suitable.map(esc).join(", ")}`)});
+  m.fitBounds(pts,{padding:[30,30],maxZoom:13})}
+function hcard(h){const b=h.score_breakdown||{};
+  return `<div class="hcard ${h.suitable?"":"dim"} ${h.rank===1?"top1":""}">
+  <div class="hcard-top"><div><div class="hname">${h.rank?`<span class="rank">#${h.rank}</span>`:""}${esc(h.hospital_name)}</div><div class="sm mut">${esc(h.location)} · ☎ ${esc(h.contact)}</div></div>
+   <div class="match">${h.suitable?`<b>${h.match_percent}%</b><span>match</span>`:`<span class="tag r">Not suitable</span>`}</div></div>
+  <div class="res-tags">${Object.entries(h.resource_detail).map(([k,v])=>`<span class="tag ${h.resources[k]==="Available"?"g":"r"}">${rl(k)} · ${v.total?`${v.available}/${v.total} free`:"not offered"}</span>`).join("")}${h.emergency_available?"":`<span class="tag">No emergency dept.</span>`}</div>
+  <div class="facts"><span><b>${h.distance_km} km</b> away</span><span>~<b>${h.estimated_travel_min} min</b> by ambulance</span><span><b>${h.occupancy_percent}%</b> occupied</span><span>Updated ${ago(h.last_updated)}</span></div>
+  ${h.warning?`<div class="warn">⚠ ${esc(h.warning)}</div>`:""}
+  ${h.suitable?`<div class="brk">${[["distance","Distance"],["availability","Free capacity"],["hospital_load","Hospital load"],["data_freshness","Data freshness"]].map(([k,l])=>`<div>${l} <b class="num" style="color:var(--ink)">${b[k]}</b><div class="meter"><i style="width:${b[k]}%"></i></div></div>`).join("")}</div>`
+   :`<div class="sm" style="color:var(--crit-ink)">${h.reasons_not_suitable.map(esc).join(" · ")}</div>`}
+  <div class="hcard-act"><label class="row sm" style="gap:.35rem"><input type="checkbox" style="width:auto" onchange="pickCmp(${h.hospital_id},this.checked)"> Compare</label>
+   ${h.suitable?`<button class="btn primary" onclick="sendReq(${h.hospital_id})">Send referral request</button>`:""}</div></div>`}
+function pickCmp(id,on){on?CMP.add(id):CMP.delete(id);const b=$("cmpBtn");b.disabled=CMP.size<2;b.textContent=`Compare selected (${CMP.size})`}
+function compare(){const hs=LAST.d.filter(h=>CMP.has(h.hospital_id));const rows=[["Match",h=>h.suitable?`<b>${h.match_percent}%</b>`:`<span class="tag r">Not suitable</span>`],
+  ["Distance",h=>h.distance_km+" km"],["Travel time",h=>"~"+h.estimated_travel_min+" min"],
+  ...LAST.F.rs.map(r=>[rl(r),h=>{const v=h.resource_detail[r];return v.total?`<span class="tag ${v.available?"g":"r"}">${v.available}/${v.total} free</span>`:"not offered"}]),
+  ["Hospital occupancy",h=>h.occupancy_percent+"%"],["Emergency dept.",h=>h.emergency_available?"Yes":"No"],["Services",h=>h.services.map(esc).join(", ")],["Data updated",h=>ago(h.last_updated)+(h.warning?` <span class="warn">outdated</span>`:"")],
+  ["",h=>h.suitable?`<button class="btn primary sm" onclick="closeModal();sendReq(${h.hospital_id})">Send request</button>`:""]];
+  modal(`<div class="card-head"><h2>Compare hospitals</h2><button class="btn ghost sm" onclick="closeModal()">Close</button></div><div class="tw"><table><tr><th></th>${hs.map(h=>`<th>${esc(h.hospital_name)}</th>`).join("")}</tr>
+  ${rows.map(([l,f])=>`<tr><td class="b">${l}</td>${hs.map(h=>`<td>${f(h)}</td>`).join("")}</tr>`).join("")}</table></div>`,true)}
+function sendReq(hid){const h=LAST.d.find(x=>x.hospital_id===hid);const q=LAST.F;
+  modal(`<h2>Send referral request</h2><p class="mut sm">To <b>${esc(h.hospital_name)}</b> · ${h.distance_km} km · ~${h.estimated_travel_min} min · ${h.match_percent}% match</p>
+  <form onsubmit="doSend(event,${hid})" class="grid" style="gap:.7rem;margin-top:.8rem">
+  <div><label class="f">Patient name or reference</label><input name="ref" required maxlength="100" placeholder="e.g. Ali Raza / MRN-2231"></div>
+  <div><label class="f">Case description (shared with the hospital)</label><textarea name="desc" rows="3">${esc(q.desc)}</textarea></div>
+  <div class="row sm">${q.rs.map(r=>`<span class="tag b">${rl(r)}</span>`).join("")} ${urg(q.urg)} ${q.svc?`<span class="tag">${esc(q.svc)}</span>`:""}</div>
+  <div class="alert b sm" style="margin:0">If the hospital accepts, one unit of each resource is held for you for 15 minutes while the transfer is confirmed.</div>
+  <div class="row end"><button type="button" class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary">Send request</button></div></form>`)}
+async function doSend(e,hid){e.preventDefault();const f=formData(e.target),q=LAST.F;
+  try{const r=await api("/requests","POST",{patient_reference:f.ref,description:f.desc,required_resources:q.rs,required_service:q.svc||null,latitude:q.lat,longitude:q.lon,urgency:q.urg,hospital_id:hid});
+    closeModal();toast(r.request_status==="no_capacity"?"Capacity ran out just now. Pick another hospital.":"Request sent. The hospital has been notified.",r.request_status==="no_capacity"?"err":"ok");if(r.request_status!=="no_capacity")go("mine")}catch(x){}}
+function stepper(s){const i=STEPS.indexOf(s==="discharged"?"admitted":s);if(i<0)return"";
+  return `<ol class="stepper">${STEPS.map((k,j)=>`<li class="${j<i||(s==="admitted"||s==="discharged")&&j===i?"done":j===i?"cur":""}">${STATUS[k][0].split(" ·")[0]}</li>`).join("")}</ol>`}
+let MF="open";
+async function vMine(quiet){const d=await api("/requests");const open=d.filter(r=>["request_sent","hospital_reviewing","accepted","patient_transferred"].includes(r.request_status));
+  const list=MF==="open"?open:d;
+  M(`<div class="page-head"><div><h1>${S.role==="coordinator"?"Referrals":"My requests"}</h1><p class="mut">Track each request from sending to admission. Updates arrive automatically.</p></div>
+  <div class="row"><div class="seg"><button class="${MF==="open"?"on":""}" onclick="MF='open';vMine()">Active (${open.length})</button><button class="${MF==="all"?"on":""}" onclick="MF='all';vMine()">All (${d.length})</button></div><button class="btn primary" onclick="go('find')">New search</button></div></div>
+  ${list.length?list.map(rqCard).join(""):`<div class="card empty">${MF==="open"?"No active requests.":"No requests yet."} <a onclick="go('find')">Find a hospital</a> to send one.</div>`}`);
+  list.forEach(r=>{const el=$("qr"+r.id);if(el&&window.QRCode)new QRCode(el,{text:`MEDBED:${r.id}:${r.confirmation_code}`,width:92,height:92})});countdowns()}
+function rqCard(r){const held=r.request_status==="accepted";
+  return `<div class="rq"><div class="rq-top"><div><div class="row" style="gap:.5rem"><b>#${r.id} · ${esc(r.patient_reference)}</b>${tag(r.request_status)}${urg(r.urgency)}</div>
+   <div class="sm mut" style="margin-top:.2rem">${esc(r.hospital_name||"")} · ${r.resource_list.map(rl).join(" + ")}${r.distance_km!=null?` · ${r.distance_km} km`:""} · sent ${ago(r.created_at)}</div></div>
+   <div class="row">${held?`<button class="btn good" onclick="act(${r.id},'transfer')">Confirm transfer</button>`:""}
+   ${["request_sent","hospital_reviewing","accepted","patient_transferred"].includes(r.request_status)?`<button class="btn bad sm" onclick="confirmCancel(${r.id})">Cancel</button>`:""}
+   ${["rejected","expired","no_capacity"].includes(r.request_status)?`<button class="btn sm" onclick="go('find')">Search again</button>`:""}</div></div>
+  ${stepper(r.request_status)}
+  ${r.note?`<div class="sm mut">Note: ${esc(r.note)}</div>`:""}
+  ${held?`<div class="alert y" style="margin:.5rem 0 0">Bed held for <span class="cd" data-exp="${r.expires_at}"></span>. Confirm the transfer before it expires, or the bed is released.</div>`:""}
+  ${(held||r.request_status==="patient_transferred")&&r.confirmation_code?`<div class="qrbox"><div id="qr${r.id}"></div><div><div class="sm mut">Referral confirmation code</div><div class="code">${r.confirmation_code}</div><div class="sm mut">Show this QR / code at the hospital reception on arrival.</div></div></div>`:""}</div>`}
+function confirmCancel(id){modal(`<h2>Cancel request #${id}?</h2><p class="mut">Any bed being held for this request is released immediately.</p><div class="row end" style="margin-top:1rem"><button class="btn ghost" onclick="closeModal()">Keep it</button><button class="btn bad" onclick="closeModal();act(${id},'cancel')">Cancel request</button></div>`)}
+async function act(id,a,body){try{await api(`/requests/${id}/${a}`,"POST",body);toast({transfer:"Transfer confirmed. The hospital knows the patient is on the way.",cancel:"Request cancelled.",review:"Marked as under review.",admit:"Patient admitted. Capacity updated.",discharge:"Patient discharged. Bed released.",respond:"Response sent."}[a]||"Done","ok");VIEWS[S.tab]()}catch(x){}}
+
+/* Directory / live capacity map */
+let DQ={name:"",res:"",svc:"",avail:false};
+async function vDir(quiet){const p=new URLSearchParams();if(DQ.name)p.set("name",DQ.name);if(DQ.res){p.set("resource",DQ.res);if(DQ.avail)p.set("only_available","true")}if(DQ.svc)p.set("service",DQ.svc);
+  const hs=await api("/hospitals?"+p);const g=(h,t)=>h.capacities.find(c=>c.resource_type===t)||{available_capacity:0,total_capacity:0};
+  const cell=c=>c.total_capacity?`<span class="tag ${c.available_capacity?"g":"r"} num">${c.available_capacity}/${c.total_capacity}</span>`:`<span class="mut">-</span>`;
+  if(quiet&&document.activeElement?.closest?.(".dirf"))return;
+  M(`<div class="page-head"><div><h1>${S.role==="coordinator"?"Live capacity map":"Hospital directory"}</h1><p class="mut">Free / total units at every verified hospital, updated live by hospital staff.</p></div></div>
+  <div class="card dirf"><div class="form-grid" style="margin:0"><div><label class="f">Hospital name</label><input id="dn" value="${esc(DQ.name)}" placeholder="Search"></div>
+   <div><label class="f">Resource</label><select id="dr"><option value="">Any</option>${RES.map(r=>`<option value="${r}" ${r===DQ.res?"selected":""}>${rl(r)}</option>`).join("")}</select></div>
+   <div><label class="f">Service</label><input id="ds" list="svcs2" value="${esc(DQ.svc)}" placeholder="any"><datalist id="svcs2">${SERVICES.map(s=>`<option value="${s}">`).join("")}</datalist></div>
+   <div style="align-self:end"><label class="row sm"><input type="checkbox" id="da" ${DQ.avail?"checked":""} style="width:auto"> Only with free capacity</label></div>
+   <div style="align-self:end"><button class="btn primary" onclick="DQ={name:$('dn').value,res:$('dr').value,svc:$('ds').value,avail:$('da').checked};vDir()">Apply filters</button></div></div></div>
+  <div class="grid g2"><div class="card tw" style="padding:0"><table><tr><th>Hospital</th><th>ICU</th><th>Ventilator</th><th>Emergency</th><th>General</th><th>Updated</th></tr>
+  ${hs.map(h=>`<tr><td><b>${esc(h.name)}</b><div class="xs mut">${esc(h.location)}${h.emergency_available?"":" · no emergency dept."}</div></td><td>${cell(g(h,"icu"))}</td><td>${cell(g(h,"ventilator"))}</td><td>${cell(g(h,"emergency"))}</td><td>${cell(g(h,"general"))}</td>
+   <td class="xs">${ago(h.capacities.reduce((a,c)=>c.last_updated>a?c.last_updated:a,""))}${h.capacities.some(c=>c.outdated)?`<br><span class="warn">may be outdated</span>`:""}</td></tr>`).join("")||`<tr><td colspan="6" class="empty">No hospitals match these filters.</td></tr>`}</table></div>
+  <div><div id="map" class="map short"></div>${occLegend()}</div></div>`);
+  const m=newMap("map",25.40,68.36,11);if(!m)return;hs.forEach(h=>{const i=g(h,"icu"),o=occOf(h);L.circleMarker([h.latitude,h.longitude],{radius:11,color:"#fff",weight:2,fillColor:occColor(o),fillOpacity:.9}).addTo(m)
+   .bindPopup(`<b>${esc(h.name)}</b><br>Bed occupancy ${o}%<br>ICU free: ${i.available_capacity}/${i.total_capacity}<br>Ventilators free: ${g(h,"ventilator").available_capacity}`)})}
+const BEDS=["general","emergency","icu","nicu","isolation","trauma"];
+const occOf=h=>{const c=h.capacities.filter(x=>BEDS.includes(x.resource_type));return pct(c.reduce((a,x)=>a+x.occupied_capacity+x.reserved_capacity,0),c.reduce((a,x)=>a+x.total_capacity,0))};
+const occColor=o=>o>=95?"#d03b3b":o>=85?"#ec835a":o>=70?"#fab219":"#0ca30c";
+const occLegend=()=>`<div class="legend" style="margin-top:.4rem"><span>Bed occupancy:</span><span><i style="background:#0ca30c"></i>under 70%</span><span><i style="background:#fab219"></i>70-84%</span><span><i style="background:#ec835a"></i>85-94%</span><span><i style="background:#d03b3b"></i>95%+ critical</span></div>`;
+
+/* ================= HOSPITAL STAFF ================= */
+const pendingBanner=()=>S.hosp&&S.hosp.verification_status!=="verified"?`<div class="alert y">Your hospital is <b>${esc(S.hosp.verification_status)}</b>. It will appear in patient search after an administrator verifies it.</div>`:"";
+async function vDash(quiet){const [a,f]=await Promise.all([api("/analytics/hospital/"+S.hid),api("/analytics/forecast/"+S.hid)]);
+  const RISK={critical:"r",high:"y",medium:"b",low:"g"};
+  M(`${pendingBanner()}<div class="page-head"><div><h1>${esc(a.hospital)}</h1><p class="mut">Live capacity, referral activity and short-term forecast.</p></div><div class="row"><button class="btn" onclick="go('cap')">Update capacity</button><button class="btn primary" onclick="go('inbox')">Referral requests${a.pending_requests?` (${a.pending_requests})`:""}</button></div></div>
+  <div class="kpis">${kpi(a.available_beds,"Available beds",`${a.total_beds} total · ${a.reserved_beds} reserved`)}${kpi(a.occupied_beds,"Occupied beds")}${kpi(a.icu_occupancy_percent+"%","ICU occupancy")}${kpi(a.capacity_utilization_percent+"%","Bed utilisation")}
+   ${kpi(a.pending_requests,"Pending requests",`${a.emergency_requests} high / critical overall`)}${kpi(a.admissions_today,"Admissions today")}${kpi(a.acceptance_rate_percent+"%","Acceptance rate",`${a.accepted_referrals} accepted · ${a.rejected_referrals} rejected`)}${kpi(secs(a.average_response_seconds),"Avg. response time",f.predicted_response_minutes!=null?`recent: ~${f.predicted_response_minutes} min`:"")}</div>
+  <div class="grid g2"><div class="card"><div class="card-head"><h3>Bed occupancy, last 7 days</h3></div><div class="chart"><canvas id="c1"></canvas></div></div>
+   <div class="card"><div class="card-head"><h3>Referrals received vs admissions</h3></div><div class="chart"><canvas id="c2"></canvas></div></div></div>
+  <div class="grid g2"><div class="card"><div class="card-head"><h3>Capacity forecast</h3><span class="tag ai">Prediction</span></div><p class="sm mut">Trend of free units over the last 48 h, projected forward.</p>
+   <div class="tw"><table><tr><th>Resource</th><th class="n">Free now</th><th class="n">Trend / h</th><th class="n">In 6 h</th><th>Runs out</th><th>Risk</th></tr>
+   ${f.capacity.map(c=>`<tr><td>${rl(c.resource_type)}</td><td class="n">${c.available_now}/${c.total}</td><td class="n">${c.trend_per_hour>0?"+":""}${c.trend_per_hour}</td><td class="n">${c.predicted_available_in_6h}</td>
+    <td class="sm">${c.available_now===0?"full now":c.hours_until_full!=null?"~"+c.hours_until_full+" h":"not expected"}</td><td><span class="tag ${RISK[c.risk]}">${c.risk}</span></td></tr>`).join("")}</table></div></div>
+   <div class="card"><div class="card-head"><h3>Occupancy by resource</h3></div><div class="chart tall"><canvas id="c3"></canvas></div>
+    <div class="card-head" style="margin-top:1rem"><h3>Expected referrals, next 6 hours</h3><span class="tag ai">Demand forecast</span></div><div class="chart" style="height:170px"><canvas id="c4"></canvas></div></div></div>`);
+  chart("c1","line",a.occupancy_trend.map(x=>dayLbl(x.date)),[{label:"Occupancy",data:a.occupancy_trend.map(x=>x.occupancy_percent)}],{pctAxis:true,max:100});
+  chart("c2","bar",a.daily_requests.map(x=>dayLbl(x.date)),[{label:"Referrals received",data:a.daily_requests.map(x=>x.count)},{label:"Admissions",data:a.daily_admissions.map(x=>x.count)}]);
+  const rs=a.resources.filter(r=>r.total_capacity&&r.resource_type!=="ambulance");
+  chart("c3","bar",rs.map(r=>rl(r.resource_type)),[{label:"Occupied + reserved",data:rs.map(r=>pct(r.occupied_capacity+r.reserved_capacity,r.total_capacity))}],{indexAxis:"y",pctAxis:true,max:100});
+  chart("c4","bar",f.demand.next_6_hours.map(x=>String(new Date(Date.UTC(2000,0,1,x.hour)).getHours()).padStart(2,"0")+":00"),[{label:"Expected requests",data:f.demand.next_6_hours.map(x=>x.expected_requests)}])}
+
+let IF="pending";
+const URANK={critical:0,high:1,medium:2,low:3};
+async function vInbox(quiet){const d=await api("/requests");
+  const groups={pending:d.filter(r=>["request_sent","hospital_reviewing"].includes(r.request_status)).sort((a,b)=>URANK[a.urgency]-URANK[b.urgency]||T(a.created_at)-T(b.created_at)),
+    active:d.filter(r=>["accepted","patient_transferred"].includes(r.request_status)),all:d};
+  if(quiet&&document.activeElement?.id==="vcode")return;
+  const c=$("inboxCnt");if(c){c.hidden=!groups.pending.length;c.textContent=groups.pending.length}
+  const list=groups[IF];
+  M(`${pendingBanner()}<div class="page-head"><div><h1>Referral requests</h1><p class="mut">Most urgent first. Accepting holds the bed for 15 minutes automatically.</p></div>
+   <div class="seg">${[["pending","Waiting for response"],["active","Accepted / on the way"],["all","All"]].map(([k,l])=>`<button class="${IF===k?"on":""}" onclick="IF='${k}';vInbox()">${l} (${groups[k].length})</button>`).join("")}</div></div>
+  <div class="card"><div class="row"><b>Patient arrived?</b><span class="sm mut">Scan the QR or type the 6-character code from the patient's phone.</span><span class="sp"></span>
+   <input id="vcode" placeholder="e.g. 4F2A9C" style="max-width:180px;text-transform:uppercase" onkeydown="if(event.key==='Enter')verifyCode()"><button class="btn primary" onclick="verifyCode()">Verify & admit</button></div></div>
+  ${list.length?list.map(inCard).join(""):`<div class="card empty">Nothing here right now.</div>`}`)}
+function inCard(r){const st=r.request_status,sum=summaryText(r);
+  return `<div class="rq" style="${r.urgency==="critical"&&["request_sent","hospital_reviewing"].includes(st)?"border-left:4px solid var(--crit)":""}"><div class="rq-top"><div>
+  <div class="row" style="gap:.5rem"><b>#${r.id} · ${esc(r.patient_reference)}</b>${urg(r.urgency)}${tag(st)}</div>
+  <div class="sm mut" style="margin-top:.2rem">Needs ${r.resource_list.map(rl).join(" + ")}${r.required_service?" · "+esc(r.required_service):""}${r.distance_km!=null?` · ${r.distance_km} km away`:""}${r.match_percent!=null?` · ${r.match_percent}% match`:""} · received ${ago(r.created_at)}</div></div>
+  <div class="row">${st==="request_sent"?`<button class="btn sm" onclick="act(${r.id},'review')">Start review</button>`:""}
+   ${["request_sent","hospital_reviewing"].includes(st)?`<button class="btn good" onclick="act(${r.id},'respond',{accept:true})">Accept & hold bed</button><button class="btn bad" onclick="rejectReq(${r.id})">Reject</button>`:""}
+   ${["accepted","patient_transferred"].includes(st)?`<button class="btn good" onclick="admitReq(${r.id})">Confirm admission</button>`:""}</div></div>
+  ${sum&&sum!==r.description?`<div class="summary"><b>AI summary:</b> ${esc(sum)}</div>`:""}${r.description?`<div class="sm" style="margin-top:.3rem">${esc(r.description)}</div>`:""}
+  ${st==="accepted"?`<div class="sm" style="margin-top:.4rem">Bed held · expires in <span class="cd" data-exp="${r.expires_at}"></span></div>`:""}${r.note?`<div class="sm mut">Note: ${esc(r.note)}</div>`:""}</div>`}
+function rejectReq(id){modal(`<h2>Reject request #${id}</h2><form onsubmit="event.preventDefault();closeModal();act(${id},'respond',{accept:false,note:this.reason.value==='Other'?this.other.value:this.reason.value})" class="grid" style="gap:.7rem;margin-top:.6rem">
+  <div><label class="f">Reason (shown to the requester)</label><select name="reason">${["No bed available","No specialist on duty","Equipment under maintenance","Patient needs a higher-level facility","Other"].map(x=>`<option>${x}</option>`).join("")}</select></div>
+  <div><label class="f">Other reason</label><input name="other"></div><div class="row end"><button type="button" class="btn ghost" onclick="closeModal()">Back</button><button class="btn bad">Reject request</button></div></form>`)}
+function admitReq(id){modal(`<h2>Confirm admission #${id}</h2><p class="mut sm">Enter the code from the patient's referral QR to verify identity. You can leave it empty if the patient has no phone.</p>
+  <form onsubmit="event.preventDefault();closeModal();act(${id},'admit',{confirmation_code:this.code.value.trim()||null})" class="grid" style="gap:.7rem;margin-top:.6rem">
+  <div><label class="f">Confirmation code</label><input name="code" placeholder="optional" style="text-transform:uppercase"></div><div class="row end"><button type="button" class="btn ghost" onclick="closeModal()">Back</button><button class="btn good">Admit patient</button></div></form>`)}
+async function verifyCode(){let c=$("vcode").value.trim().toUpperCase();if(!c)return;if(c.startsWith("MEDBED:"))c=c.split(":")[2]||"";
+  try{const r=await api("/requests/verify/"+encodeURIComponent(c));
+    modal(`<h2>Referral #${r.id} verified ✓</h2><p><b>${esc(r.patient_reference)}</b> · ${r.resource_list.map(rl).join(" + ")} · ${urg(r.urgency)} ${tag(r.request_status)}</p>${summaryText(r)?`<div class="summary">${esc(summaryText(r))}</div>`:""}
+    <div class="row end" style="margin-top:1rem"><button class="btn ghost" onclick="closeModal()">Close</button>${["accepted","patient_transferred"].includes(r.request_status)?`<button class="btn good" onclick="closeModal();act(${r.id},'admit',{confirmation_code:'${c}'})">Admit patient</button>`:""}</div>`)}catch(x){}}
+
+let DIRTY=false;
+async function vCap(quiet){if(quiet&&(DIRTY||document.activeElement?.closest?.("#captbl")))return;
+  const h=await api("/hospitals/"+S.hid);S.hosp=h;save();DIRTY=false;
+  const old=h.capacities.filter(c=>c.outdated).length;
+  M(`${pendingBanner()}<div class="page-head"><div><h1>Capacity</h1><p class="mut">Patients and coordinators see these numbers live. Reserved units are held by accepted referrals and change automatically.</p></div>
+   <div class="row"><button class="btn" onclick="confirmAll()">✓ All numbers still correct</button></div></div>
+  ${old?`<div class="alert y">${old} resource(s) have not been updated for over an hour and are shown to patients as <b>may be outdated</b>.</div>`:""}
+  <div class="card tw" style="padding:0"><table id="captbl"><tr><th>Resource</th><th>Beds</th><th>Total</th><th>Occupied</th><th>Out of service</th><th class="n">Reserved</th><th class="n">Free</th><th>Updated</th><th></th></tr>
+  ${h.capacities.map(c=>{const r=c.resource_type;return `<tr id="row_${r}"><td class="b">${rl(r)}</td><td>${beds(c)}</td>
+   <td>${stepIn("t_"+r,c.total_capacity)}</td><td>${stepIn("o_"+r,c.occupied_capacity)}</td><td>${stepIn("u_"+r,c.unavailable_capacity)}</td>
+   <td class="n">${c.reserved_capacity}</td><td class="n"><b style="color:${c.available_capacity?"var(--good-ink)":"var(--crit-ink)"}">${c.available_capacity}</b></td>
+   <td class="xs">${ago(c.last_updated)}${c.outdated?`<br><span class="warn">may be outdated</span>`:""}</td><td><button class="btn primary sm" onclick="saveCap('${r}')">Save</button></td></tr>`}).join("")}</table></div>
+  <div class="legend"><span><i style="background:#8a98a6"></i>Occupied</span><span><i style="background:var(--warn)"></i>Reserved</span><span><i style="background:var(--crit);opacity:.55"></i>Out of service</span><span><i style="background:#4fc28a"></i>Free</span></div>`)}
+const stepIn=(id,v)=>`<span class="stepbox"><button type="button" onclick="bump('${id}',-1)" aria-label="minus">−</button><input id="${id}" type="number" min="0" value="${v}" oninput="markDirty('${id}')"><button type="button" onclick="bump('${id}',1)" aria-label="plus">+</button></span>`;
+function bump(id,d){const el=$(id);el.value=Math.max(0,(+el.value||0)+d);markDirty(id)}
+function markDirty(id){DIRTY=true;$("row_"+id.slice(2)).classList.add("dirty")}
+function beds(c){const t=Math.min(c.total_capacity,48);if(!t)return"<span class='xs mut'>not offered</span>";const k=c.total_capacity/t;let h="";
+  const o=Math.round(c.occupied_capacity/k),r=Math.round(c.reserved_capacity/k),u=Math.round(c.unavailable_capacity/k);
+  for(let i=0;i<t;i++)h+=`<i class="${i<o?"o":i<o+r?"r":i<o+r+u?"u":""}"></i>`;return `<div class="beds" title="${c.occupied_capacity} occupied, ${c.reserved_capacity} reserved, ${c.unavailable_capacity} out of service, ${c.available_capacity} free">${h}</div>`}
+async function saveCap(r){try{await api(`/hospitals/${S.hid}/capacity/${r}`,"PUT",{total_capacity:+$("t_"+r).value,occupied_capacity:+$("o_"+r).value,unavailable_capacity:+$("u_"+r).value});
+  toast(rl(r)+" saved","ok");$("row_"+r).classList.remove("dirty");DIRTY=!!document.querySelector("tr.dirty");if(!DIRTY)vCap()}catch(x){}}
+async function confirmAll(){try{await api(`/hospitals/${S.hid}/confirm-capacity`,"POST");toast("All values confirmed as current","ok");DIRTY=false;vCap()}catch(x){}}
+
+async function vPat(quiet){const d=await api("/requests?status=admitted,discharged");const adm=d.filter(r=>r.request_status==="admitted"),dis=d.filter(r=>r.request_status==="discharged").slice(0,15);
+  M(`<div class="page-head"><div><h1>Admitted patients</h1><p class="mut">Discharging a patient frees their bed and equipment immediately.</p></div></div>
+  <div class="card tw" style="padding:0"><table><tr><th>#</th><th>Patient</th><th>Using</th><th>Urgency</th><th>Admitted</th><th></th></tr>
+  ${adm.map(r=>`<tr><td>${r.id}</td><td><b>${esc(r.patient_reference)}</b><div class="xs mut">${esc(summaryText(r)||r.description).slice(0,90)}</div></td><td>${r.resource_list.map(x=>`<span class="tag b">${rl(x)}</span>`).join(" ")}</td><td>${urg(r.urgency)}</td><td class="sm">${fmtT(r.admitted_at)}<div class="xs mut">${ago(r.admitted_at)}</div></td>
+   <td><button class="btn sm" onclick="discharge(${r.id})">Discharge</button></td></tr>`).join("")||`<tr><td colspan="6" class="empty">No admitted patients from referrals.</td></tr>`}</table></div>
+  ${dis.length?`<h3>Recently discharged</h3><div class="card tw" style="padding:0"><table><tr><th>#</th><th>Patient</th><th>Used</th><th>Admitted</th><th>Discharged</th></tr>${dis.map(r=>`<tr><td>${r.id}</td><td>${esc(r.patient_reference)}</td><td class="sm">${r.resource_list.map(rl).join(", ")}</td><td class="sm">${fmtT(r.admitted_at)}</td><td class="sm">${fmtT(r.discharged_at)}</td></tr>`).join("")}</table></div>`:""}`)}
+function discharge(id){modal(`<h2>Discharge patient #${id}?</h2><p class="mut">Their bed and equipment become available to new referrals.</p><div class="row end" style="margin-top:1rem"><button class="btn ghost" onclick="closeModal()">Back</button><button class="btn primary" onclick="closeModal();act(${id},'discharge')">Discharge</button></div>`)}
+
+async function vProf(){const h=await api("/hospitals/"+S.hid);S.hosp=h;save();
+  M(`${pendingBanner()}<div class="page-head"><div><h1>Hospital profile</h1><p class="mut">Service availability is used by smart matching: hospitals without a requested service are not recommended.</p></div><span>Verification: <span class="tag ${h.verification_status==="verified"?"g":"y"}">${esc(h.verification_status)}</span></span></div>
+  <div class="grid g2"><div class="card"><form onsubmit="saveProf(event)" class="grid" style="gap:.8rem">
+   <div><label class="f">Hospital</label><input value="${esc(h.name)}" disabled></div>
+   <div class="form-grid" style="margin:0"><div><label class="f">Address / area</label><input name="location" value="${esc(h.location)}"></div><div><label class="f">Contact number</label><input name="contact" value="${esc(h.contact)}"></div></div>
+   <div><label class="f">Specialist services offered</label><div class="chips" id="svcchips">${[...new Set([...SERVICES,...h.services.split(",").map(s=>s.trim()).filter(Boolean)])].map(s=>`<label class="chip"><input type="checkbox" value="${esc(s)}" ${h.services.split(",").map(x=>x.trim()).includes(s)?"checked":""}>${esc(s)}</label>`).join("")}</div></div>
+   <div><label class="f">Add another service</label><input name="extra" placeholder="e.g. oncology"></div>
+   <label class="row"><input type="checkbox" name="emergency" ${h.emergency_available?"checked":""} style="width:auto"> <span><b>Emergency department open</b><br><span class="sm mut">Turn off if the ED cannot take high / critical cases right now.</span></span></label>
+   <div class="row end"><button class="btn primary">Save profile</button></div></form></div>
+  <div class="card"><h3>Location</h3><div id="map" class="map short"></div></div></div>`);
+  const m=newMap("map",h.latitude,h.longitude,14);if(m)L.marker([h.latitude,h.longitude]).addTo(m).bindPopup(esc(h.name))}
+async function saveProf(e){e.preventDefault();const f=e.target;const svc=[...document.querySelectorAll("#svcchips input:checked")].map(c=>c.value);if(f.extra.value.trim())svc.push(...f.extra.value.split(","));
+  try{await api("/hospitals/"+S.hid,"PATCH",{location:f.location.value,contact:f.contact.value,services:svc.join(","),emergency_available:f.emergency.checked});toast("Profile saved","ok");vProf()}catch(x){}}
+
+/* ================= ADMIN ================= */
+async function vSys(quiet){const [a,o]=await Promise.all([api("/analytics/system"),api("/admin/outdated")]);
+  M(`<div class="page-head"><div><h1>System overview</h1><p class="mut">Capacity and referral activity across all verified hospitals.</p></div></div>
+  ${a.pending_hospitals?`<div class="alert b">${a.pending_hospitals} hospital(s) waiting for verification. <a onclick="go('hosp')">Review now</a></div>`:""}
+  ${a.suspicious_unreviewed?`<div class="alert r">${a.suspicious_unreviewed} suspicious capacity change(s) need review. <a onclick="AF=true;go('audit')">Open audit log</a></div>`:""}
+  <div class="kpis">${kpi(a.total_hospitals,"Verified hospitals",a.pending_hospitals+" pending")}${kpi(a.open_requests,"Open referrals")}${kpi(a.total_requests,"Total referrals")}${kpi(a.admitted_today,"Admitted today")}
+   ${kpi(secs(a.average_response_seconds),"Avg. hospital response")}${kpi(a.low_capacity_areas.length,"Areas under 20% free")}${kpi(a.total_users,"Users")}</div>
+  <div class="grid g2"><div class="card"><div class="card-head"><h3>Bed occupancy by hospital</h3></div><div class="chart tall"><canvas id="c1"></canvas></div></div>
+   <div class="card"><div class="card-head"><h3>Regional capacity heatmap</h3></div><div id="map" class="map short" style="height:300px"></div>${occLegend()}</div></div>
+  <div class="grid g2"><div class="card"><div class="card-head"><h3>Referrals per day, last 14 days</h3></div><div class="chart"><canvas id="c2"></canvas></div></div>
+   <div class="card"><div class="card-head"><h3>System bed occupancy trend</h3></div><div class="chart"><canvas id="c5"></canvas></div></div></div>
+  <div class="grid g2"><div class="card"><div class="card-head"><h3>Peak demand by hour of day (UTC)</h3></div><div class="chart"><canvas id="c3"></canvas></div><p class="sm mut">Busiest: ${a.peak_demand_hours.map(h=>`${h.hour}:00 (${h.requests})`).join(", ")||"-"}</p></div>
+   <div class="card"><div class="card-head"><h3>Most requested resources</h3></div><div class="chart"><canvas id="c4"></canvas></div></div></div>
+  <div class="grid g3"><div class="card"><h3>Free beds by area</h3><table><tr><th>Area</th><th class="n">Hospitals</th><th class="n">Free</th><th style="width:35%"></th></tr>${a.areas.map(x=>`<tr><td>${esc(x.city)}</td><td class="n">${x.hospitals}</td><td class="n">${x.available}/${x.total}</td><td>${meter(100-x.available_percent)}<span class="xs mut">${x.available_percent}% free</span></td></tr>`).join("")}</table></div>
+   <div class="card"><h3>Fastest responding hospitals</h3><table>${a.response_time_by_hospital.map(x=>`<tr><td>${esc(x.hospital)}</td><td class="n">${secs(x.average_seconds)}</td></tr>`).join("")||"<tr><td class='mut'>No data</td></tr>"}</table></div>
+   <div class="card"><h3>Outdated capacity data</h3>${o.map(h=>`<p><b>${esc(h.name)}</b><br><span class="warn">${h.outdated_resources.map(rl).join(", ")} · last ${ago(h.oldest_update)}</span></p>`).join("")||"<p class='mut'>All hospitals are up to date.</p>"}</div></div>`);
+  const ho=a.hospital_occupancy;chart("c1","bar",ho.map(x=>x.hospital.length>24?x.hospital.slice(0,22)+"…":x.hospital),[{label:"Bed occupancy",data:ho.map(x=>x.occupancy_percent)}],{indexAxis:"y",pctAxis:true,max:100});
+  chart("c2","line",a.daily_requests.map(x=>dayLbl(x.date)),[{label:"Referrals",data:a.daily_requests.map(x=>x.count)}]);
+  chart("c5","line",a.occupancy_trend.map(x=>dayLbl(x.date)),[{label:"Occupancy",data:a.occupancy_trend.map(x=>x.occupancy_percent)}],{pctAxis:true,max:100});
+  chart("c3","bar",[...Array(24).keys()].map(h=>h+":00"),[{label:"Referrals",data:a.requests_by_hour}]);
+  chart("c4","bar",a.most_requested_resources.map(x=>rl(x[0])),[{label:"Requests",data:a.most_requested_resources.map(x=>x[1])}],{indexAxis:"y"});
+  const m=newMap("map",25.41,68.37,10);if(m){ho.forEach(h=>L.circle([h.latitude,h.longitude],{radius:1400,color:occColor(h.occupancy_percent),weight:1,fillColor:occColor(h.occupancy_percent),fillOpacity:.45}).addTo(m).bindPopup(`<b>${esc(h.hospital)}</b><br>${esc(h.city)}<br>Bed occupancy ${h.occupancy_percent}%`));
+    m.fitBounds(ho.map(h=>[h.latitude,h.longitude]),{padding:[30,30]})}}
+
+async function vHosp(quiet){if(quiet&&$("modal").style.display==="grid")return;const hs=await api("/admin/hospitals");const g=(h,t)=>h.capacities.find(c=>c.resource_type===t)||{};
+  const vt=s=>`<span class="tag ${s==="verified"?"g":s==="pending"?"y":"r"}">${s}</span>`;
+  M(`<div class="page-head"><div><h1>Hospitals</h1><p class="mut">Verify new hospitals, suspend accounts, and review capacity. Only verified, active hospitals appear in patient search.</p></div><button class="btn primary" onclick="addHospital()">+ Add hospital</button></div>
+  <div class="card tw" style="padding:0"><table><tr><th>Hospital</th><th>Verification</th><th>Account</th><th class="n">Beds free</th><th class="n">ICU free</th><th class="n">Ventilators</th><th>Occupancy</th><th>Updated</th><th></th></tr>
+  ${hs.map(h=>{const b=h.capacities.filter(c=>BEDS.includes(c.resource_type)),o=occOf(h);return `<tr><td><a onclick="hospDetail(${h.id})"><b>${esc(h.name)}</b></a><div class="xs mut">${esc(h.city)} · ${esc(h.contact)}</div></td>
+   <td>${vt(h.verification_status)}</td><td><span class="tag ${h.account_status==="active"?"":"r"}">${h.account_status}</span></td>
+   <td class="n">${b.reduce((a,c)=>a+c.available_capacity,0)}/${b.reduce((a,c)=>a+c.total_capacity,0)}</td><td class="n">${g(h,"icu").available_capacity??0}/${g(h,"icu").total_capacity??0}</td><td class="n">${g(h,"ventilator").available_capacity??0}/${g(h,"ventilator").total_capacity??0}</td>
+   <td style="min-width:110px">${meter(o)}<span class="xs mut">${o}%</span></td><td class="xs">${ago(h.capacities.reduce((a,c)=>c.last_updated>a?c.last_updated:a,""))}${h.capacities.some(c=>c.outdated)?`<br><span class="warn">outdated</span>`:""}</td>
+   <td><div class="row" style="gap:.3rem;flex-wrap:nowrap">${h.verification_status!=="verified"?`<button class="btn good sm" onclick="setHosp(${h.id},'verify','verified')">Verify</button>`:""}
+    ${h.verification_status==="pending"?`<button class="btn bad sm" onclick="setHosp(${h.id},'verify','rejected')">Reject</button>`:""}
+    ${h.verification_status==="verified"?(h.account_status==="active"?`<button class="btn bad sm" onclick="setHosp(${h.id},'status','suspended')">Suspend</button>`:`<button class="btn sm" onclick="setHosp(${h.id},'status','active')">Re-activate</button>`):""}</div></td></tr>`}).join("")}</table></div>`)}
+async function setHosp(id,kind,s){try{await api(`/admin/hospitals/${id}/${kind}?status=${s}`,"PATCH");toast("Hospital "+s,"ok");vHosp()}catch(x){}}
+function addHospital(){modal(`<h2>Add hospital</h2><p class="mut sm">Hospitals added by an administrator are verified immediately. Create a staff account for it under Users.</p>
+  <form onsubmit="doAddHosp(event)" class="grid" style="gap:.7rem;margin-top:.8rem">${hospitalFields()}<div class="row end"><button type="button" class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary">Add hospital</button></div></form>`)}
+async function doAddHosp(e){e.preventDefault();try{await api("/hospitals","POST",hospitalBody(formData(e.target)));closeModal();toast("Hospital added","ok");vHosp()}catch(x){}}
+async function hospDetail(id){const h=await api("/hospitals/"+id);
+  modal(`<div class="card-head"><div><h2>${esc(h.name)}</h2><span class="sm mut">${esc(h.location)} · ${esc(h.city)} · ☎ ${esc(h.contact)} · ${h.emergency_available?"Emergency dept. open":"No emergency dept."}</span></div><button class="btn ghost sm" onclick="closeModal()">Close</button></div>
+  <p class="sm"><b>Services:</b> ${esc(h.services.split(",").join(", "))||"-"}</p><div class="tw"><table><tr><th>Resource</th><th class="n">Total</th><th class="n">Occupied</th><th class="n">Reserved</th><th class="n">Out of service</th><th class="n">Free</th><th>Updated</th></tr>
+  ${h.capacities.map(c=>`<tr><td>${rl(c.resource_type)}</td><td class="n">${c.total_capacity}</td><td class="n">${c.occupied_capacity}</td><td class="n">${c.reserved_capacity}</td><td class="n">${c.unavailable_capacity}</td><td class="n"><b>${c.available_capacity}</b></td><td class="xs">${ago(c.last_updated)}${c.outdated?` <span class="warn">outdated</span>`:""}</td></tr>`).join("")}</table></div>`,true)}
+
+async function vUsers(){const [us,hs]=await Promise.all([api("/admin/users"),api("/admin/hospitals")]);const hn=Object.fromEntries(hs.map(h=>[h.id,h.name]));window._hs=hs;
+  M(`<div class="page-head"><div><h1>Users & permissions</h1><p class="mut">Roles decide what each person can see and change. Disabled users cannot sign in.</p></div><button class="btn primary" onclick="addUser()">+ Add user</button></div>
+  <div class="card tw" style="padding:0"><table><tr><th>User</th><th>Role</th><th>Hospital</th><th>Created</th><th>Status</th><th></th></tr>
+  ${us.map(u=>`<tr><td><b>${esc(u.full_name)}</b><div class="xs mut">@${esc(u.username)}${u.phone?" · "+esc(u.phone):""}</div></td><td>${ROLE[u.role]}</td><td class="sm">${esc(hn[u.hospital_id]||"-")}</td><td class="sm">${fmtT(u.created_at)}</td>
+   <td><span class="tag ${u.is_active?"g":"r"}">${u.is_active?"active":"disabled"}</span></td><td><button class="btn sm ${u.is_active?"bad":""}" onclick="toggleUser(${u.id},${!u.is_active})">${u.is_active?"Disable":"Enable"}</button></td></tr>`).join("")}</table></div>`)}
+function toggleUser(id,on){if(on)return doToggleUser(id,true);
+  modal(`<h2>Disable this user?</h2><p class="mut">They will not be able to sign in until an administrator enables the account again.</p><div class="row end" style="margin-top:1rem"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn bad" onclick="closeModal();doToggleUser(${id},false)">Disable user</button></div>`)}
+async function doToggleUser(id,on){try{await api(`/admin/users/${id}/active?active=${on}`,"PATCH");toast(on?"User enabled":"User disabled","ok");vUsers()}catch(x){}}
+function addUser(){modal(`<h2>Add user</h2><form onsubmit="doAddUser(event)" class="grid" style="gap:.7rem;margin-top:.8rem">
+  <div class="form-grid" style="margin:0"><div><label class="f">Full name</label><input name="full_name" required></div><div><label class="f">Phone</label><input name="phone"></div></div>
+  <div class="form-grid" style="margin:0"><div><label class="f">Username</label><input name="username" required minlength="3"></div><div><label class="f">Temporary password</label><input name="password" required minlength="6"></div></div>
+  <div class="form-grid" style="margin:0"><div><label class="f">Role</label><select name="role" onchange="$('uh').disabled=this.value!=='hospital_staff'">${Object.entries(ROLE).map(([k,v])=>`<option value="${k}" ${k==="hospital_staff"?"selected":""}>${v}</option>`).join("")}</select></div>
+   <div><label class="f">Hospital (staff only)</label><select name="hospital_id" id="uh">${window._hs.map(h=>`<option value="${h.id}">${esc(h.name)}</option>`).join("")}</select></div></div>
+  <div class="row end"><button type="button" class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary">Create user</button></div></form>`)}
+async function doAddUser(e){e.preventDefault();const f=formData(e.target);f.hospital_id=f.role==="hospital_staff"?+f.hospital_id:null;
+  try{await api("/admin/users","POST",f);closeModal();toast("User created","ok");vUsers()}catch(x){}}
+
+let AF=false;
+function fmtDetails(a){let d;try{d=JSON.parse(a.details)}catch{return esc(a.details)}if(typeof d!=="object"||!d)return esc(a.details);
+  if(d.old&&d.new)return `${rl(d.resource)}: `+(["total","occupied","unavailable"].filter(k=>d.old[k]!==d.new[k]).map(k=>`${k} <b>${d.old[k]} → ${d.new[k]}</b>`).join(", ")||"no change");
+  return Object.entries(d).map(([k,v])=>`${nm(k)}: ${esc(Array.isArray(v)?v.join(", "):typeof v==="object"?JSON.stringify(v):v)}`).join(" · ")}
+async function vAudit(){const l=await api(`/admin/audit-logs?limit=200${AF?"&suspicious_only=true":""}`);
+  M(`<div class="page-head"><div><h1>Audit log</h1><p class="mut">Every capacity change, referral decision and admin action. Large sudden changes are flagged for review.</p></div>
+  <div class="seg"><button class="${AF?"":"on"}" onclick="AF=false;vAudit()">All activity</button><button class="${AF?"on":""}" onclick="AF=true;vAudit()">Suspicious only</button></div></div>
+  <div class="card tw" style="padding:0"><table><tr><th>Time</th><th>Action</th><th>By</th><th>Hospital</th><th>Details</th><th></th></tr>
+  ${l.map(a=>`<tr style="${a.suspicious&&!a.reviewed?"background:#fff6f6":""}"><td class="sm">${fmtT(a.timestamp)}</td><td>${nm(a.action)}</td><td class="sm">${esc(a.username)}</td><td class="sm">${esc(a.hospital||"-")}</td><td class="sm">${fmtDetails(a)}</td>
+   <td>${a.suspicious?(a.reviewed?`<span class="tag g">reviewed</span>`:`<button class="btn bad sm" onclick="reviewLog(${a.id})">Mark reviewed</button>`):""}</td></tr>`).join("")||`<tr><td colspan="6" class="empty">No entries.</td></tr>`}</table></div>`)}
+async function reviewLog(id){try{await api(`/admin/audit-logs/${id}/review`,"PATCH");toast("Marked as reviewed","ok");vAudit()}catch(x){}}
+
+/* ============ boot ============ */
+if(S.token){api("/auth/me").then(()=>start()).catch(()=>logout())}
+</script></body></html>
