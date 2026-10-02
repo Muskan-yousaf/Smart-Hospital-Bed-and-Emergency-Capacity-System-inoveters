@@ -22,28 +22,46 @@ async def expiry_loop():
         try:
             with SessionLocal() as db:
                 expire_old_reservations(db)
-        except Exception as e:  # never let the background loop die
+        except Exception as e:
             print("expiry_loop error:", e)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(engine)
-    if os.getenv("SEED_DEMO_DATA", "1") == "1":
-        with SessionLocal() as db:
-            seed(db)
-    task = asyncio.create_task(expiry_loop())
+    # Serverless check: Skip background loops on Vercel
+    is_vercel = os.getenv("VERCEL") == "1"
+    
+    try:
+        Base.metadata.create_all(engine)
+        if os.getenv("SEED_DEMO_DATA", "1") == "1":
+            with SessionLocal() as db:
+                seed(db)
+    except Exception as e:
+        print("Database init error:", e)
+
+    task = None
+    if not is_vercel:
+        task = asyncio.create_task(expiry_loop())
+
     yield
-    task.cancel()
+
+    if task:
+        task.cancel()
 
 
 app = FastAPI(
     title="Smart Hospital Bed & Emergency Capacity System",
     description="Need -> Capacity -> Matching -> Referral -> Admission -> Updated Capacity",
-    version="2.0", lifespan=lifespan,
+    version="2.0",
+    lifespan=lifespan,
 )
-app.add_middleware(CORSMiddleware, allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
-                   allow_methods=["*"], allow_headers=["*"])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 for r in (auth_r, hosp_r, search_r, req_r, notif_r, ana_r, admin_r):
     app.include_router(r)
@@ -51,7 +69,9 @@ for r in (auth_r, hosp_r, search_r, req_r, notif_r, ana_r, admin_r):
 
 @app.get("/", include_in_schema=False)
 def frontend():
-    return FileResponse(FRONTEND)
+    if FRONTEND.exists():
+        return FileResponse(FRONTEND)
+    return {"message": "Smart Hospital API is Running", "docs": "/docs"}
 
 
 @app.get("/health", tags=["Health"])
