@@ -3,29 +3,14 @@
   "builds": [
     {
       "src": "app/main.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "frontend/**",
-      "use": "@vercel/static"
+      "use": "@vercel/python",
+      "config": { "includeFiles": "frontend/**" }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/docs",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/openapi.json",
-      "dest": "app/main.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "frontend/$1"
+      "dest": "app/main.py"
     }
   ]
 }
