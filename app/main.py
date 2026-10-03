@@ -1,10 +1,10 @@
-import asyncio
 import os
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 
 from .database import Base, engine, SessionLocal
 from . import models  # noqa: F401  (register tables)
@@ -12,7 +12,20 @@ from .routes import auth_r, hosp_r, search_r, req_r, notif_r, ana_r, admin_r
 from .seed import seed
 from .services import expire_old_reservations
 
-FRONTEND = Path(__file__).resolve().parent.parent / "frontend" / "index.html"
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_CANDIDATES = [
+    BASE_DIR / "frontend" / "index.html",
+    BASE_DIR / "index.html",
+    BASE_DIR / "public" / "index.html",
+    Path.cwd() / "frontend" / "index.html",
+]
+
+
+def find_frontend() -> Path | None:
+    for p in FRONTEND_CANDIDATES:
+        if p.exists():
+            return p
+    return None
 
 
 async def expiry_loop():
@@ -28,23 +41,12 @@ async def expiry_loop():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Serverless check: Skip background loops on Vercel
-    is_vercel = os.getenv("VERCEL") == "1"
-    
-    try:
-        Base.metadata.create_all(engine)
-        if os.getenv("SEED_DEMO_DATA", "1") == "1":
-            with SessionLocal() as db:
-                seed(db)
-    except Exception as e:
-        print("Database init error:", e)
-
-    task = None
-    if not is_vercel:
-        task = asyncio.create_task(expiry_loop())
-
+    Base.metadata.create_all(engine)
+    with SessionLocal() as db:
+        seed(db)
+    # Vercel par background loop nahi chalti; wahan expiry requests par check hoti hai
+    task = None if os.getenv("VERCEL") else asyncio.create_task(expiry_loop())
     yield
-
     if task:
         task.cancel()
 
@@ -69,8 +71,12 @@ for r in (auth_r, hosp_r, search_r, req_r, notif_r, ana_r, admin_r):
 
 @app.get("/", include_in_schema=False)
 def frontend():
-    if FRONTEND.exists():
-        return FileResponse(FRONTEND)
+    path = find_frontend()
+    if path:
+        html = path.read_text(encoding="utf-8")
+        # Frontend hamesha usi link ke backend se baat kare jis par khula hai
+        html = html.replace("http://127.0.0.1:8000", "").replace("http://localhost:8000", "")
+        return HTMLResponse(html)
     return {"message": "Smart Hospital API is Running", "docs": "/docs"}
 
 

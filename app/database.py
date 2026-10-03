@@ -1,23 +1,16 @@
 import os
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hospital.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    # Vercel mein sirf /tmp likhne ke liye hota hai
+    DATABASE_URL = "sqlite:////tmp/hospital.db" if os.getenv("VERCEL") else "sqlite:///./hospital.db"
+if DATABASE_URL.startswith(("postgres://", "postgresql://")):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1).replace("postgresql://", "postgresql+psycopg2://", 1)
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-)
-
-if DATABASE_URL.startswith("sqlite"):
-    @event.listens_for(engine, "connect")
-    def _sqlite_pragmas(conn, _):
-        cur = conn.cursor()
-        cur.execute("PRAGMA foreign_keys=ON")
-        cur.execute("PRAGMA journal_mode=WAL")   # readers don't block the writer
-        cur.execute("PRAGMA busy_timeout=5000")
-        cur.close()
-
+kw = {"connect_args": {"check_same_thread": False}} if DATABASE_URL.startswith("sqlite") else {"pool_pre_ping": True}
+engine = create_engine(DATABASE_URL, **kw)
 SessionLocal = sessionmaker(bind=engine, autoflush=False)
 
 
